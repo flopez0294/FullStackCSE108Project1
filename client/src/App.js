@@ -10,8 +10,8 @@ function App() {
         return res.json();
       })
       .then((data) => {
-        // console.log(data);
-        // setData(data);
+        console.log(data);
+        setData(data);
       });
   }, [])
 
