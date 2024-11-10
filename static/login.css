@@ -1,0 +1,18 @@
+body {
+    background-image: linear-gradient(to right, rgb(194, 40, 40) , rgb(185, 131, 131));
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.container {
+    width: 300px;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    background-color: #f9f9f9;
+
+}
+
