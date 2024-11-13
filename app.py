@@ -4,7 +4,8 @@ from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.form import SecureForm
 from flask_login import login_required, UserMixin, login_user, LoginManager, login_required, logout_user, current_user
-from wtforms import PasswordField
+from flask_wtf import FlaskForm
+from wtforms import PasswordField, StringField, SelectField
 from wtforms.validators import DataRequired
 
 app = Flask(__name__)
@@ -16,23 +17,72 @@ db = SQLAlchemy(app)
 admin = Admin(app, name='Admin', template_mode='bootstrap3')
 
 
+enrollment = db.Table('enrollment',
+    db.Column('student_id', db.Integer, db.ForeignKey('student.id'), primary_key=True),
+    db.Column('course_id', db.Integer, db.ForeignKey('course.id'), primary_key=True)
+)
+
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
+    fullname = db.Column(db.String(100), nullable=False)
     username = db.Column(db.String(100), unique=True, nullable=False)
+    password = db.Column(db.String(100), nullable=False)
+    role = db.Column(db.String(50), nullable=False)
+
+    def __repr__(self):
+        return f"<User {self.fullname}>"
+
+class Teacher(User):
+    __tablename__ = 'teacher'
+    id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
+
+class Student(User):
+    __tablename__ = 'student'
+    id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
+    courses = db.relationship('Course', secondary=enrollment, back_populates="students")
+
+class Course(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    currsize = db.Column(db.Integer, nullable=False, default=0)
+    maxsize = db.Column(db.Integer, nullable=False)
     
+    # Foreign key to User (Teacher)
+    teacher_id = db.Column(db.Integer, db.ForeignKey('teacher.id'), nullable=False)
+    teacher = db.relationship('Teacher', backref=db.backref('courses', lazy=True))
     
+    # Many-to-many relationship with students
+    students = db.relationship('Student', secondary=enrollment, back_populates="courses")
+
+    def __repr__(self):
+        return f"<Course {self.name}>"
+
+# Admin Views
+class UserForm(FlaskForm):
+    fullname = StringField("Fullname", validators=[DataRequired()])
+    username = StringField('Username', validators=[DataRequired()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    role = SelectField(
+        'Role',
+        choices=[('student', 'Student'), ('teacher', 'Teacher')],
+        validators=[DataRequired()]
+    )
     
-    
-class UserView(ModelView):
-    form_base_class = SecureForm
+
+class StudentView(ModelView):
+    form = UserForm
     can_create = True
     can_delete = True
     can_edit = True
-    
-    form_choices = {}
 
+class TeacherView(ModelView):
+    form = UserForm
+    can_create = True
+    can_delete = True
+    can_edit = True
 
-admin.add_view(UserView(User, db.session))
+admin.add_view(StudentView(Student, db.session))
+admin.add_view(TeacherView(Teacher, db.session))
 
 
 # Ensure tables are created
