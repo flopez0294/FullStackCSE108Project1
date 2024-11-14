@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, render_template, make_response, request
+from flask import Flask, jsonify, render_template, make_response, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
@@ -15,6 +15,9 @@ app.config['FLASK_ADMIN_SWATCH'] = 'cerulean'
 app.secret_key = 'Freak Bob'
 db = SQLAlchemy(app)
 admin = Admin(app, name='Admin', template_mode='bootstrap3')
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
 
 enrollment = db.Table('enrollment',
     db.Column('student_id', db.Integer, db.ForeignKey('student.id'), primary_key=True),
@@ -30,6 +33,9 @@ class User(db.Model, UserMixin):
 
     def __repr__(self):
         return f"<User {self.fullname}>"
+    
+    def get_id(self):
+        return str(self.id)
 
 class Teacher(User):
     __tablename__ = 'teacher'
@@ -90,30 +96,41 @@ admin.add_view(StudentView(Student, db.session))
 # with app.app_context():
 #     db.create_all()
 
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
-@app.route("/login", methods=['GET'])
-def member():
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash("You have been Logged Out", 'message')
+    return redirect(url_for('login'))
+
+
+@app.route("/login", methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    if request.method == "POST":
+        user = User.query.filter_by(username=request.form.get('username')).first()
+        if user:
+            if user.password == request.form.get('password'):
+                login_user(user)
+                if user.role == "Student":
+                    return redirect(url_for('index'))
+                if user.role == "Teacher":
+                    return redirect("/teacher")
+                if user.role == "Admin":
+                    return redirect("/admin") 
+            flash("Incorrect password. Please try again.", "error")
+            return redirect(url_for('login'))
+        flash("Incorrect password or Username. Please try again.", "error")
+        return redirect(url_for('login'))
     return render_template('login.html')
 
-@app.route("/login_method", methods=['GET'])
-def loging_in():
-    username = request.form.get('username')
-    password = request.form.get('password')
-
-    username_search = User.query.filter_by(username = username).first()
-    password_search = User.query.filter_by(password = password).first()
-    
-    if not username_search:
-        return make_response("Student Not Found", 404)
-    else:
-        #if username found, query the role and then do if password_serach and role==student or
-        if password_search:
-            return make_response('Logged in')
-            #if password matches, we query the role and send them to whichever role is
-        else:
-            return make_response("Password doesn't match")
-        
 @app.route("/")
+@login_required
 def index():
     return render_template('index.html')
 
