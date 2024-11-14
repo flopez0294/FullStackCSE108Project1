@@ -1,12 +1,12 @@
 from flask import Flask, jsonify, render_template, make_response, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
-from flask_admin import Admin
+from flask_admin import Admin, expose
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.form import SecureForm
 from flask_login import login_required, UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 from flask_wtf import FlaskForm
-from wtforms import PasswordField, StringField, SelectField
-from wtforms.validators import DataRequired
+from wtforms import PasswordField, StringField, SelectField, IntegerField, SelectMultipleField, SubmitField
+from wtforms.validators import DataRequired, Optional
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db.sqlite3"
@@ -19,17 +19,28 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-enrollment = db.Table('enrollment',
-    db.Column('student_id', db.Integer, db.ForeignKey('student.id'), primary_key=True),
-    db.Column('course_id', db.Integer, db.ForeignKey('course.id'), primary_key=True)
-)
+
+class StudentCourse(db.Model):
+    __tablename__ = 'student_course'
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column('student_id', db.Integer, db.ForeignKey('students.id'))
+    course_id = db.Column('course_id', db.Integer, db.ForeignKey('courses.id'))
+    grade = db.Column(db.Float, nullable=True)
+    
+class TeacherCourse(db.Model):
+    __tablename__ = 'teacher_course'
+    id = db.Column(db.Integer, primary_key=True)
+    teacher_id = db.Column('teacher_id', db.Integer, db.ForeignKey('teachers.id'))
+    course_id = db.Column('course_id', db.Integer, db.ForeignKey('courses.id'))
 
 class User(db.Model, UserMixin):
+    __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
     fullname = db.Column(db.String(100), nullable=False)
     username = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(100), nullable=False)
     role = db.Column(db.String(50), nullable=False)
+    
 
     def __repr__(self):
         return f"<User {self.fullname}>"
@@ -38,26 +49,30 @@ class User(db.Model, UserMixin):
         return str(self.id)
 
 class Teacher(User):
-    __tablename__ = 'teacher'
+    __tablename__ = 'teachers'
     id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
+    courses = db.relationship('Course', secondary='teacher_course', back_populates="teachers")
+    def __repr__(self):
+        return f"<User {self.fullname}>"
 
 class Student(User):
-    __tablename__ = 'student'
+    __tablename__ = 'students'
     id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
-    courses = db.relationship('Course', secondary=enrollment, back_populates="students")
+    courses = db.relationship('Course', secondary='student_course', back_populates="students")
+    
 
 class Course(db.Model):
+    __tablename__ = 'courses'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     currsize = db.Column(db.Integer, nullable=False, default=0)
     maxsize = db.Column(db.Integer, nullable=False)
     
     # Foreign key to User (Teacher)
-    teacher_id = db.Column(db.Integer, db.ForeignKey('teacher.id'), nullable=False)
-    teacher = db.relationship('Teacher', backref=db.backref('courses', lazy=True))
+    teachers = db.relationship('Teacher', secondary='teacher_course', back_populates='courses')
     
     # Many-to-many relationship with students
-    students = db.relationship('Student', secondary=enrollment, back_populates="courses")
+    students = db.relationship('Student', secondary='student_course', back_populates="courses")
 
     def __repr__(self):
         return f"<Course {self.name}>"
@@ -71,25 +86,54 @@ class UserForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired()])
     role = SelectField(
         'Role',
-        choices=[('student', 'Student'), ('teacher', 'Teacher')],
+        choices=[('student', 'Student'), ('teacher', 'Teacher'), ('admin', 'Admin')],
         validators=[DataRequired()]
     )
     
 
+class CourseForm(FlaskForm):
+    name = StringField('Course Name', validators=[DataRequired()])
+    currsize = IntegerField('Current Size', validators=[DataRequired()])
+    maxsize = IntegerField('Max Size', validators=[DataRequired()])
+    teachers = SelectField('Teachers', choices=[], coerce=int,)
+    submit = SubmitField('Create Course')
+
+
+    
+
 class StudentView(ModelView):
     form = UserForm
+    form.role = SelectField('Role', choices=[('student', 'Student')], validators=[DataRequired()])
     can_create = True
     can_delete = True
     can_edit = True
 
 class TeacherView(ModelView):
     form = UserForm
+    form.role = SelectField('Role', choices=[('teacher', 'Teacher')], validators=[DataRequired()])
     can_create = True
     can_delete = True
     can_edit = True
+    
+class AllUserView(ModelView):
+    form = UserForm
+    can_create = True
+    can_delete = True
+    can_edit = True
+    
+class CourseView(ModelView):
+    can_create = True
+    can_delete = True
+    can_edit = True
+    
 
+
+
+            
 admin.add_view(StudentView(Student, db.session))
-# admin.add_view(TeacherView(Teacher, db.session))
+admin.add_view(TeacherView(Teacher, db.session))
+admin.add_view(AllUserView(User, db.session))
+admin.add_view(CourseView(Course, db.session))
 
 
 # Ensure tables are created
