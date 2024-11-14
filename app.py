@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, render_template
+from flask import Flask, jsonify, render_template, make_response, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
@@ -15,6 +15,10 @@ app.config['FLASK_ADMIN_SWATCH'] = 'cerulean'
 app.secret_key = 'Freak Bob'
 db = SQLAlchemy(app)
 admin = Admin(app, name='Admin', template_mode='bootstrap3')
+
+from flask_sqlalchemy import SQLAlchemy
+
+db = SQLAlchemy()
 
 
 enrollment = db.Table('enrollment',
@@ -56,8 +60,10 @@ class Course(db.Model):
 
     def __repr__(self):
         return f"<Course {self.name}>"
-
 # Admin Views
+
+
+
 class UserForm(FlaskForm):
     fullname = StringField("Fullname", validators=[DataRequired()])
     username = StringField('Username', validators=[DataRequired()])
@@ -82,20 +88,36 @@ class TeacherView(ModelView):
     can_edit = True
 
 admin.add_view(StudentView(Student, db.session))
-admin.add_view(TeacherView(Teacher, db.session))
+# admin.add_view(TeacherView(Teacher, db.session))
 
 
 # Ensure tables are created
-with app.app_context():
-    db.create_all()
+# with app.app_context():
+#     db.create_all()
 
-
-@app.route("/admin")
 
 @app.route("/login", methods=['GET'])
 def member():
     return render_template('login.html')
 
+@app.route("/login_method", methods=['GET'])
+def loging_in():
+    username = request.form.get('username')
+    password = request.form.get('password')
+
+    username_search = User.query.filter_by(username = username).first()
+    password_search = User.query.filter_by(password = password).first()
+    
+    if not username_search:
+        return make_response("Student Not Found", 404)
+    else:
+        #if username found, query the role and then do if password_serach and role==student or
+        if password_search:
+            return make_response('Logged in')
+            #if password matches, we query the role and send them to whichever role is
+        else:
+            return make_response("Password doesn't match")
+        
 @app.route("/")
 def index():
     return render_template('index.html')

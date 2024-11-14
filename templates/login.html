@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../static/login.css" />
-    <title>Login</title>
+    <script src="/static/student.js"> </script>
+    <title>Login Page</title>
 </head>
 <body>
     <div class="container">
         <h2>Login Page</h2>
-        <form>
+        <form action="/login_method" method="post">
             <label for="username">Username:</label>
             <input type="text" id="username" name="username" placeholder="Enter you Username" required>
             <label for="password">Password:</label>
