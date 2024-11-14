@@ -41,7 +41,7 @@ input {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
 }
 
-button {
+.submit {
     background-color: rgba(194, 40, 40, 1);
     border: none;
     padding: 15px;
@@ -55,7 +55,7 @@ button {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.9);
 }
 
-button:hover {
+.submit:hover {
     background-color: rgba(194, 40, 40, .8);
     
 }

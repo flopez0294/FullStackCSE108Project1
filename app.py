@@ -1,11 +1,13 @@
 from flask import Flask, jsonify, render_template, make_response, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
-from flask_admin import Admin, expose
+from flask_admin import Admin, AdminIndexView
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.form import SecureForm
 from flask_login import login_required, UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 from flask_wtf import FlaskForm
-from wtforms import PasswordField, StringField, SelectField, IntegerField, SelectMultipleField, SubmitField
+from flask_wtf.form import _Auto
+from wtforms import PasswordField, StringField, SelectField, IntegerField
+from wtforms_sqlalchemy.fields import QuerySelectMultipleField
 from wtforms.validators import DataRequired, Optional
 
 app = Flask(__name__)
@@ -14,7 +16,6 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config['FLASK_ADMIN_SWATCH'] = 'cerulean'
 app.secret_key = 'Freak Bob'
 db = SQLAlchemy(app)
-admin = Admin(app, name='Admin', template_mode='bootstrap3')
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
@@ -93,11 +94,13 @@ class UserForm(FlaskForm):
 
 class CourseForm(FlaskForm):
     name = StringField('Course Name', validators=[DataRequired()])
-    currsize = IntegerField('Current Size', validators=[DataRequired()])
+    currsize = IntegerField('Current Size', validators=[Optional()], default=0)
     maxsize = IntegerField('Max Size', validators=[DataRequired()])
-    teachers = SelectField('Teachers', choices=[], coerce=int,)
-    submit = SubmitField('Create Course')
-
+    teachers = QuerySelectMultipleField(
+        'Teachers',
+        query_factory=lambda: Teacher.query.all(),
+        get_label="fullname"
+    )
 
     
 
@@ -107,6 +110,12 @@ class StudentView(ModelView):
     can_create = True
     can_delete = True
     can_edit = True
+    
+    def is_accessible(self):
+        return current_user.is_authenticated and current_user.role == 'admin'
+    
+    def inaccessible_callback(self, name, **kwargs):
+        return redirect(url_for('login'))
 
 class TeacherView(ModelView):
     form = UserForm
@@ -115,21 +124,53 @@ class TeacherView(ModelView):
     can_delete = True
     can_edit = True
     
+    def is_accessible(self):
+        return current_user.is_authenticated and current_user.role == 'admin'
+    
+    def inaccessible_callback(self, name, **kwargs):
+        return redirect(url_for('login'))
+    
 class AllUserView(ModelView):
     form = UserForm
     can_create = True
     can_delete = True
     can_edit = True
     
+    def is_accessible(self):
+        return current_user.is_authenticated and current_user.role == 'admin'
+    
+    def inaccessible_callback(self, name, **kwargs):
+        return redirect(url_for('login'))
+    
 class CourseView(ModelView):
+    form = CourseForm
     can_create = True
     can_delete = True
     can_edit = True
     
+    def is_accessible(self):
+        return current_user.is_authenticated and current_user.role == 'admin'
+    
+    def inaccessible_callback(self, name, **kwargs):
+        return redirect(url_for('login'))
+    
+    def on_model_change(self, form, model, is_created):
+        model.teachers = []
+        
+        # Add the selected teachers to the course
+        for teacher in form.teachers.data:
+            model.teachers.append(teacher)
+        
+        super().on_model_change(form, model, is_created)
 
+class MyAdminIndexView(AdminIndexView):
+    def is_accessible(self):
+        return current_user.is_authenticated and current_user.role == 'admin'
+    
+    def inaccessible_callback(self, name, **kwargs):
+        return redirect(url_for('login'))
 
-
-            
+admin = Admin(app, name='Admin', index_view=MyAdminIndexView(), template_mode='bootstrap3')         
 admin.add_view(StudentView(Student, db.session))
 admin.add_view(TeacherView(Teacher, db.session))
 admin.add_view(AllUserView(User, db.session))
@@ -140,6 +181,8 @@ admin.add_view(CourseView(Course, db.session))
 # with app.app_context():
 #     db.create_all()
 
+
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -148,24 +191,29 @@ def load_user(user_id):
 @login_required
 def logout():
     logout_user()
-    flash("You have been Logged Out", 'message')
+    flash("You have been Logged Out", 'info')
     return redirect(url_for('login'))
 
 
 @app.route("/login", methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('index'))
+        if current_user.role == "student":
+            return redirect('/student')
+        if current_user.role == "teacher":
+            return redirect("/teacher")
+        if current_user.role == "admin":
+               return redirect("/admin") 
     if request.method == "POST":
         user = User.query.filter_by(username=request.form.get('username')).first()
         if user:
             if user.password == request.form.get('password'):
                 login_user(user)
-                if user.role == "Student":
-                    return redirect(url_for('index'))
-                if user.role == "Teacher":
+                if user.role == "student":
+                    return redirect('/student')
+                if user.role == "teacher":
                     return redirect("/teacher")
-                if user.role == "Admin":
+                if user.role == "admin":
                     return redirect("/admin") 
             flash("Incorrect password. Please try again.", "error")
             return redirect(url_for('login'))
