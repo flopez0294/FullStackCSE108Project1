@@ -16,11 +16,6 @@ app.secret_key = 'Freak Bob'
 db = SQLAlchemy(app)
 admin = Admin(app, name='Admin', template_mode='bootstrap3')
 
-from flask_sqlalchemy import SQLAlchemy
-
-db = SQLAlchemy()
-
-
 enrollment = db.Table('enrollment',
     db.Column('student_id', db.Integer, db.ForeignKey('student.id'), primary_key=True),
     db.Column('course_id', db.Integer, db.ForeignKey('course.id'), primary_key=True)
@@ -132,3 +127,4 @@ def teacher_view():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
