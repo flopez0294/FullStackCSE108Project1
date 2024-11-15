@@ -9,6 +9,7 @@ from flask_wtf.form import _Auto
 from wtforms import PasswordField, StringField, SelectField, IntegerField
 from wtforms_sqlalchemy.fields import QuerySelectMultipleField
 from wtforms.validators import DataRequired, Optional
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db.sqlite3"
@@ -39,9 +40,8 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     fullname = db.Column(db.String(100), nullable=False)
     username = db.Column(db.String(100), unique=True, nullable=False)
-    password = db.Column(db.String(100), nullable=False)
+    password = db.Column(db.String(200), nullable=False)
     role = db.Column(db.String(50), nullable=False)
-    
 
     def __repr__(self):
         return f"<User {self.fullname}>"
@@ -102,7 +102,26 @@ class CourseForm(FlaskForm):
         get_label="fullname"
     )
 
+class AllUserView(ModelView):
+    form = UserForm
+    form.role = SelectField(
+        'Role',
+        choices=[('student', 'Student'), ('teacher', 'Teacher'), ('admin', 'Admin')],
+        validators=[DataRequired()]
+    )
+    can_create = True
+    can_delete = True
+    can_edit = True
     
+    def is_accessible(self):
+        return current_user.is_authenticated and current_user.role == 'admin'
+    
+    def inaccessible_callback(self, name, **kwargs):
+        return redirect(url_for('login'))
+    
+    def on_model_change(self, form, model, is_created):
+        model.password = generate_password_hash(model.password)
+        super().on_model_change(form, model, is_created)    
 
 class StudentView(ModelView):
     form = UserForm
@@ -116,6 +135,10 @@ class StudentView(ModelView):
     
     def inaccessible_callback(self, name, **kwargs):
         return redirect(url_for('login'))
+    
+    def on_model_change(self, form, model, is_created):
+        model.password = generate_password_hash(model.password)
+        super().on_model_change(form, model, is_created)
 
 class TeacherView(ModelView):
     form = UserForm
@@ -130,17 +153,9 @@ class TeacherView(ModelView):
     def inaccessible_callback(self, name, **kwargs):
         return redirect(url_for('login'))
     
-class AllUserView(ModelView):
-    form = UserForm
-    can_create = True
-    can_delete = True
-    can_edit = True
-    
-    def is_accessible(self):
-        return current_user.is_authenticated and current_user.role == 'admin'
-    
-    def inaccessible_callback(self, name, **kwargs):
-        return redirect(url_for('login'))
+    def on_model_change(self, form, model, is_created):
+        model.password = generate_password_hash(model.password)
+        super().on_model_change(form, model, is_created)
     
 class CourseView(ModelView):
     form = CourseForm
@@ -170,10 +185,10 @@ class MyAdminIndexView(AdminIndexView):
     def inaccessible_callback(self, name, **kwargs):
         return redirect(url_for('login'))
 
-admin = Admin(app, name='Admin', index_view=MyAdminIndexView(), template_mode='bootstrap3')         
+admin = Admin(app, name='Admin', index_view=MyAdminIndexView(), template_mode='bootstrap3')  
+admin.add_view(AllUserView(User, db.session))       
 admin.add_view(StudentView(Student, db.session))
 admin.add_view(TeacherView(Teacher, db.session))
-admin.add_view(AllUserView(User, db.session))
 admin.add_view(CourseView(Course, db.session))
 
 
@@ -207,7 +222,7 @@ def login():
     if request.method == "POST":
         user = User.query.filter_by(username=request.form.get('username')).first()
         if user:
-            if user.password == request.form.get('password'):
+            if check_password_hash(user.password, request.form.get('password')):
                 login_user(user)
                 if user.role == "student":
                     return redirect('/student')
