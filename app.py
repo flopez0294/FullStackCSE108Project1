@@ -1,3 +1,4 @@
+from datetime import time
 from flask import Flask, jsonify, render_template, make_response, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_admin import Admin, AdminIndexView
@@ -6,10 +7,11 @@ from flask_admin.form import SecureForm
 from flask_login import login_required, UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 from flask_wtf import FlaskForm
 from flask_wtf.form import _Auto
-from wtforms import PasswordField, StringField, SelectField, IntegerField
+from wtforms import PasswordField, StringField, SelectField, IntegerField, TimeField, SelectMultipleField
 from wtforms_sqlalchemy.fields import QuerySelectMultipleField
 from wtforms.validators import DataRequired, Optional
 from werkzeug.security import generate_password_hash, check_password_hash
+from wtforms.widgets import ListWidget, CheckboxInput
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db.sqlite3"
@@ -21,6 +23,9 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
+class MultiCheckboxField(SelectMultipleField):
+    widget = ListWidget(prefix_label=False)
+    option_widget = CheckboxInput()
 
 class StudentCourse(db.Model):
     __tablename__ = 'student_course'
@@ -68,7 +73,9 @@ class Course(db.Model):
     name = db.Column(db.String(100), nullable=False)
     currsize = db.Column(db.Integer, nullable=False, default=0)
     maxsize = db.Column(db.Integer, nullable=False)
-    
+    days = db.Column(db.String(100), nullable=False) 
+    start_time = db.Column(db.Time, nullable=False)
+    end_time = db.Column(db.Time, nullable=False)
     # Foreign key to User (Teacher)
     teachers = db.relationship('Teacher', secondary='teacher_course', back_populates='courses')
     
@@ -96,19 +103,18 @@ class CourseForm(FlaskForm):
     name = StringField('Course Name', validators=[DataRequired()])
     currsize = IntegerField('Current Size', validators=[Optional()], default=0)
     maxsize = IntegerField('Max Size', validators=[DataRequired()])
+    days =  StringField("Days using comma to separate", validators=[DataRequired()])
+    start_time = TimeField('Start Time', validators=[DataRequired()])
+    end_time = TimeField('End Time', validators=[DataRequired()])
     teachers = QuerySelectMultipleField(
         'Teachers',
         query_factory=lambda: Teacher.query.all(),
         get_label="fullname"
     )
+    
 
 class AllUserView(ModelView):
     form = UserForm
-    form.role = SelectField(
-        'Role',
-        choices=[('student', 'Student'), ('teacher', 'Teacher'), ('admin', 'Admin')],
-        validators=[DataRequired()]
-    )
     can_create = True
     can_delete = True
     can_edit = True
@@ -125,7 +131,7 @@ class AllUserView(ModelView):
 
 class StudentView(ModelView):
     form = UserForm
-    form.role = SelectField('Role', choices=[('student', 'Student')], validators=[DataRequired()])
+    # form.role = SelectField('Role', choices=[('student', 'Student')], validators=[DataRequired()])
     can_create = True
     can_delete = True
     can_edit = True
@@ -142,7 +148,7 @@ class StudentView(ModelView):
 
 class TeacherView(ModelView):
     form = UserForm
-    form.role = SelectField('Role', choices=[('teacher', 'Teacher')], validators=[DataRequired()])
+    # form.role = SelectField('Role', choices=[('teacher', 'Teacher')], validators=[DataRequired()])
     can_create = True
     can_delete = True
     can_edit = True
