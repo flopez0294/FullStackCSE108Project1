@@ -11,26 +11,21 @@
     <a href="/logout" id="sign_out_button">Sign Out</a>
     <div id="formatting">
         <div id="student_buttons">
-            <button> Your Courses</button>
-            <button>Add Courses</button>
+            <button onclick="student_courses_table()"> Your Courses</button>
+            <button onclick="load_available_courses()"> Add Courses</button>
         </div>
-        <div id="student_table">
+        <div id="student_table" hidden>
             <table>
                 <thead>
                     <tr>
                         <th> Course name</th>
                         <th> Teacher</th>
                         <th> Time</th>
-                        <th> Students Enrolled</th>
+                        <th> Grades</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td> Physics 121 </td>
-                        <td> Susan Walker </td>
-                        <td> TR 11:00-11:50 AM </td>
-                        <td> 3/10 </td>
-                    </tr>
+
                 </tbody>
             </table>
         </div>

@@ -245,15 +245,129 @@ def login():
 @app.route("/")
 @login_required
 def index():
-    return render_template('index.html')
+    return redirect(url_for('login'))
 
 @app.route("/student")
 def student_view():
     return render_template('student.html')
+    
+@app.route("/student_table", methods=["GET"])
+def course_table():
+    student = Student.query.filter_by(id=current_user.id).first()
+    if not student:
+            return jsonify({"error": "Student not found"}), 404
+
+    student_courses = student.courses
+    print("getting course data")
+    courses_data = [
+        {
+            "name": course.name,
+            "teacher": ", ".join([teacher.fullname for teacher in course.teachers]),
+            "time": f"{course.days} {course.start_time.strftime('%H:%M')} - {course.end_time.strftime('%H:%M')}",
+            "enrolled": f"{len(course.students)}/{course.maxsize}"
+        } for course in student_courses
+    ]
+    
+    return jsonify(courses_data)
+
+@app.route("/available_courses", methods=["GET"])
+@login_required
+def available_courses():
+    student = Student.query.filter_by(id=current_user.id).first()
+    if not student:
+        return jsonify({"error": "Student not found"}), 404
+
+
+    all_courses = Course.query.all()
+    
+    courses_data = [
+        {
+            "id": course.id,
+            "name": course.name,
+            "teacher": ", ".join([teacher.fullname for teacher in course.teachers]),
+            "time": f"{course.days} {course.start_time.strftime('%H:%M')} - {course.end_time.strftime('%H:%M')}",
+            "enrolled": f"{len(course.students)}/{course.maxsize}"
+        }
+        for course in all_courses
+    ]
+    
+    return jsonify(courses_data)
+
+@app.route("/join_course/<int:course_id>", methods=["POST"])
+def join_course(course_id):
+    student = Student.query.filter_by(id=current_user.id).first()
+    course = Course.query.get(course_id)
+
+    if not student or not course:
+        return jsonify({"error": "Student or course not found"}), 404
+    
+    # Check if course is full
+    if len(course.students) >= course.maxsize:
+        return jsonify({"success": False}), 400  # Course is full
+
+    # Add student to course
+    course.students.append(student)
+    student.courses.append(course)
+    db.session.commit()
+
+    return jsonify({"success": True})
+    
 
 @app.route("/teacher")
 def teacher_view():
     return render_template('teacher.html')
+
+@app.route("/teacher_courses", methods = ['GET'])
+@login_required
+def teacher_course():
+    teacher = Teacher.query.filter_by(id=current_user.id).first()
+
+    if not teacher:
+        flash("cannot access page", "error")
+        return redirect(url_for("index"))
+
+    courses_data = [
+        {
+        "id": course.id ,
+        "name": course.name,
+        "time": f"{course.days} {course.start_time.strftime('%H:%M')} - {course.end_time.strfrtime('%H:%M')}",
+        "enrolled": f"{len(course.students)}/{course.maxsize}"
+        }
+        for course in teacher.courses
+    ]
+
+    return render_template("teacher_courses.html", courses=courses_data)
+
+@app.route("/course_students/<int:course_id>", methods=["GET"])
+@login_required
+def course_students(course_id):
+    
+    teacher = Teacher.query.filter_by(id=current_user.id).first()
+    if not teacher:
+        flash("You must be a teacher to access this page", "error")
+        return redirect(url_for("index"))
+
+    
+    course = Course.query.get(course_id)
+    if not course or teacher not in course.teachers:
+        flash("You are not authorized to view this course", "error")
+        return redirect(url_for("teacher_courses"))
+
+   
+    students_data = [
+        {
+            "fullname": student.fullname,
+            "username": student.username,
+            "grade": next(
+                (sc.grade for sc in StudentCourse.query.filter_by(student_id=student.id, course_id=course_id).all()), None
+            )
+        }
+        for student in course.students
+    ]
+
+   
+    return render_template("course_students.html", course=course, students=students_data)
+
 
 if __name__ == "__main__":
     app.run(debug=True)

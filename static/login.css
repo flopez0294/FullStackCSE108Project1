@@ -61,27 +61,17 @@ input {
 }
 
 
-
-th {
-    padding: 10px;
-    margin: 5px;
-    border: 2px;
-    margin-bottom: 0px;
-
-    border-style: solid;
-    border-color: whitesmoke;
-    background-image: linear-gradient(to right, rgb(194, 40, 40) , rgb(185, 131, 131));
-    color: whitesmoke;
+th, td {
+    padding: 12px 20px;
+    border: 1px solid whitesmoke;
+    text-align: center;
+    box-sizing: border-box;
 }
 
-td {
-    padding: 10px;
-    
-    border: 2px;
-    border-color: white;
-    border-style: solid;
-    
-    text-align: center;
+th {
+    color: white;
+    background-image: linear-gradient(to right, rgb(194, 40, 40) , rgb(185, 131, 131));
+    font-size: 18px;
 }
 
 tr {
@@ -92,40 +82,61 @@ tr {
 
 table{
     border-collapse: collapse;
-
 }
 
 #formatting {
-    width: fit-content;
+    width: 80%;
+    max-width: 1200px;
+    padding: 20px;
+    border-radius: 10px;
     margin: 0 auto;
     text-align: center;
 }
 
 #student_buttons {
     display: flex;
-    justify-content: space-between;
-    width: 100%;
-    margin: 10px;
-    padding: 20px 0;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 20px;
 }
 
 #student_buttons button {
-    flex: 1;
-    margin: 10px 10px 0px 0px;
-    padding: 10px;
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: rgba(194, 40, 40, 1);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.3s;
+}
+
+#student_buttons button:hover {
+    background-color: rgba(194, 40, 40, 0.8);
 }
 
 #student_buttons button:active {
     background-color: #555;
 }
 
+
+
 #student_table{
-    flex: 1;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#student_table table {
+    width: 100%;
+    border-collapse: collapse;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
 #sign_out_button {
     position: absolute;
     right: 20px;
     top: 20px;
+    border: #555 dashed 1px;
 }
 
