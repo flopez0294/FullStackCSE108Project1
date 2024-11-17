@@ -1,4 +1,4 @@
-body {
+.login {
     background-image: linear-gradient(to right, rgb(194, 40, 40) , rgb(185, 131, 131));
     height: 100vh;
     display: flex;
