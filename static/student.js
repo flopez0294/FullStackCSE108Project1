@@ -1,4 +1,4 @@
-const Turl = "/teacher"
+// const Turl = "/teacher_courses"
 
 function student_courses_table() {
     fetch('/student_table')
@@ -67,38 +67,28 @@ function join_course(courseId) {
 }
 
 
-async function teacher_courses_table() {
-    const Turl = "/teacher"; // Replace with your actual API endpoint for teacher courses
+function teacher_courses_table() {
+    fetch('/teacher_courses')
+        .then(response => response.json())
+        .then(data => {
+            const tbody = document.querySelector('#teacher_table tbody');
+            document.getElementById('teacher_table').style.display = 'block'; 
+            tbody.innerHTML = ''; 
 
-    try {
-        const response = await fetch(Turl); // Fetch data from server
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json(); // Parse JSON response
-
-        const tbody = document.querySelector('#student_table tbody');
-        tbody.innerHTML = ''; // Clear existing rows
-
-        // Populate table rows with data
-        data.forEach(course => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td><a href="/teacher_course/${course.id}" class="course-link">${course.name}</a></td>
-                <td>${course.teacher}</td>
-                <td>${course.time}</td>
-                <td>${course.enrolled}</td>
-            `;
-            tbody.appendChild(row);
-        });
-    } catch (error) {
-        console.error('Error fetching teacher courses:', error);
-        alert('Failed to load courses. Please check your backend.');
-    }
+            data.forEach(course => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${course.name}</td>
+                    <td>${course.time}</td>
+                    <td>${course.studentsEnrolled}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        })
+        .catch(error => console.error('Error fetching teacher courses:', error));
 }
 
-// Call the function to populate the table
+
 
 
 

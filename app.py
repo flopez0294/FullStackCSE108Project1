@@ -315,26 +315,29 @@ def join_course(course_id):
 def teacher_view():
     return render_template('teacher.html')
 
-@app.route("/teacher_courses", methods = ['GET'])
+@app.route("/teacher_courses", methods=['GET'])
 @login_required
-def teacher_course():
+def teacher_courses():
     teacher = Teacher.query.filter_by(id=current_user.id).first()
 
     if not teacher:
-        flash("cannot access page", "error")
+        flash("You must be a teacher to access this page.", "error")
         return redirect(url_for("index"))
 
     courses_data = [
         {
-        "id": course.id ,
-        "name": course.name,
-        "time": f"{course.days} {course.start_time.strftime('%H:%M')} - {course.end_time.strfrtime('%H:%M')}",
-        "enrolled": f"{len(course.students)}/{course.maxsize}"
+            "id": course.id,
+            "name": course.name,
+            "time": f"{course.days} {course.start_time.strftime('%H:%M')} - {course.end_time.strftime('%H:%M')}",
+            "enrolled": f"{len(course.students)}/{course.maxsize}"
         }
         for course in teacher.courses
     ]
 
-    return render_template("teacher_courses.html", courses=courses_data)
+    return jsonify(courses_data)
+
+
+
 
 @app.route("/course_students/<int:course_id>", methods=["GET"])
 @login_required
