@@ -29,7 +29,7 @@ function load_available_courses() {
         
 
         const tbody = document.querySelector('#student_table tbody');
-        tbody.innerHTML = '';  // Clear existing rows
+        tbody.innerHTML = '';
 
         data.forEach(course => {
             const row = document.createElement('tr');
@@ -37,7 +37,8 @@ function load_available_courses() {
                 <td>${course.name}</td>
                 <td>${course.teacher}</td>
                 <td>${course.time}</td>
-                <td>${course.enrolled ?
+                <td>${course.enrolled}</td>
+                <td>${course.is_enrolled === true ?
                         '<p >Already Enrolled</p>':
                         `<button onclick="join_course(${course.id})">Join</button>`
                 }

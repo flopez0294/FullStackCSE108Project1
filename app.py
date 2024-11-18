@@ -286,7 +286,8 @@ def available_courses():
             "name": course.name,
             "teacher": ", ".join([teacher.fullname for teacher in course.teachers]),
             "time": f"{course.days} {course.start_time.strftime('%H:%M')} - {course.end_time.strftime('%H:%M')}",
-            "enrolled": f"{len(course.students)}/{course.maxsize}"
+            "enrolled": f"{len(course.students)}/{course.maxsize}",
+            "is_enrolled": student in course.students
         }
         for course in all_courses
     ]
@@ -301,11 +302,9 @@ def join_course(course_id):
     if not student or not course:
         return jsonify({"error": "Student or course not found"}), 404
     
-    # Check if course is full
     if len(course.students) >= course.maxsize:
-        return jsonify({"success": False}), 400  # Course is full
+        return jsonify({"success": False}), 400
 
-    # Add student to course
     course.students.append(student)
     student.courses.append(course)
     db.session.commit()
