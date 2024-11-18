@@ -1,5 +1,5 @@
-.login {
-    background-image: linear-gradient(to right, rgb(194, 40, 40) , rgb(185, 131, 131));
+.login_body {
+    background-color: #e4dada;    
     height: 100vh;
     display: flex;
     justify-content: center;
@@ -93,6 +93,10 @@ table{
     text-align: center;
 }
 
+.student_body{
+    background-color: #e4dada;
+}
+
 #student_buttons {
     display: flex;
     justify-content: center;
@@ -138,5 +142,9 @@ table{
     right: 20px;
     top: 20px;
     border: #555 dashed 1px;
+}
+
+.teacher_body {
+    background-color: #e4dada;
 }
 

@@ -94,7 +94,7 @@ class UserForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired()])
     role = SelectField(
         'Role',
-        choices=[('student', 'Student'), ('teacher', 'Teacher'), ('admin', 'Admin')],
+        choices=[('student', 'Student'), ('teacher', 'Teacher')],
         validators=[DataRequired()]
     )
     
@@ -115,7 +115,7 @@ class CourseForm(FlaskForm):
 
 class AllUserView(ModelView):
     form = UserForm
-    can_create = True
+    can_create = False
     can_delete = True
     can_edit = True
     
@@ -131,7 +131,6 @@ class AllUserView(ModelView):
 
 class StudentView(ModelView):
     form = UserForm
-    # form.role = SelectField('Role', choices=[('student', 'Student')], validators=[DataRequired()])
     can_create = True
     can_delete = True
     can_edit = True
@@ -148,7 +147,6 @@ class StudentView(ModelView):
 
 class TeacherView(ModelView):
     form = UserForm
-    # form.role = SelectField('Role', choices=[('teacher', 'Teacher')], validators=[DataRequired()])
     can_create = True
     can_delete = True
     can_edit = True
@@ -264,7 +262,7 @@ def course_table():
             "name": course.name,
             "teacher": ", ".join([teacher.fullname for teacher in course.teachers]),
             "time": f"{course.days} {course.start_time.strftime('%H:%M')} - {course.end_time.strftime('%H:%M')}",
-            "enrolled": f"{len(course.students)}/{course.maxsize}"
+            "grade": f"{StudentCourse.query.filter_by(student_id=student.id, course_id=course.id).first()}"
         } for course in student_courses
     ]
     
@@ -295,6 +293,7 @@ def available_courses():
     return jsonify(courses_data)
 
 @app.route("/join_course/<int:course_id>", methods=["POST"])
+@login_required
 def join_course(course_id):
     student = Student.query.filter_by(id=current_user.id).first()
     course = Course.query.get(course_id)
