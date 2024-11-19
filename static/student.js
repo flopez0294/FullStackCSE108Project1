@@ -24,8 +24,19 @@ function student_courses_table() {
         .then(response => response.json())
         .then(data => {
             const tbody = document.querySelector('#student_table tbody');
-            document.getElementById('student_table').style.display = 'block'
+            const thead = document.querySelector('#student_table thead');
+            document.getElementById('student_table').style.display = 'block';
             tbody.innerHTML = '';
+            thead.innerHTML = '';
+
+            const title = document.createElement('tr');
+            title.innerHTML = `
+                <th>Course Name</th>
+                <th>Teacher</th>
+                <th>Time</th>
+                <th>Grades</th>
+            `;
+            thead.appendChild(title);
 
             data.forEach(course => {
                 const row = document.createElement('tr');
@@ -48,7 +59,20 @@ function load_available_courses() {
         
 
         const tbody = document.querySelector('#student_table tbody');
+        const thead = document.querySelector('#student_table thead');
         tbody.innerHTML = '';
+        thead.innerHTML = '';
+
+        const title = document.createElement('tr');
+        title.innerHTML = `
+            <th>Course Name</th>
+            <th>Teacher</th>
+            <th>Time</th>
+            <th>Students Enrolled</th>
+            <th>Registration Status</th>
+        `;
+        thead.appendChild(title);
+
 
         data.forEach(course => {
             const row = document.createElement('tr');
@@ -83,6 +107,23 @@ function join_course(courseId) {
             }
         })
         .catch(error => console.error('Error joining the course:', error));
+}
+
+function unenroll_course(courseId) {
+    fetch(`/unenroll_course/${courseId}`, 
+        { 
+        method: 'DELETE' 
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Successfully unenrolled!');
+                load_available_courses();
+            } else {
+                alert('Failed to unenroll the course.');
+            }
+        })
+        .catch(error => console.error('Error unenrolling the course:', error));
 }
 
 

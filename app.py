@@ -310,6 +310,29 @@ def join_course(course_id):
 
     return jsonify({"success": True})
     
+@app.route("/unenroll_course/<int:course_id>", methods=["DELETE"])
+@login_required
+def unenroll_course(course_id):
+    student = Student.query.filter_by(id=current_user.id).first()
+    course = Course.query.get(course_id)
+    # print(student.courses)
+    # print(course.students)
+    # for i in student.courses:
+    #     print (i)
+
+    if not student or not course:
+        return jsonify({"error": "Student or Course not found"}), 404
+    print("student in course and found in db")
+
+    if course in student.courses:
+        print("trying to delete student from db")
+        # course.students.remove(student)
+        student.courses.remove(course)
+        db.session.commit()
+        db.session.refresh(student)
+        return jsonify({"success": True})
+
+    return make_response("Student is not enrolled in the course", 400)
 
 @app.route("/teacher")
 def teacher_view():
