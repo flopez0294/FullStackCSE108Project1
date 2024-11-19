@@ -170,7 +170,7 @@ function loadCourseName() {
             return response.json();
         })
         .then(data => {
-            h1.textContent += data.coursename;
+            h1.textContent = data.coursename;
             const tbody = document.querySelector('#students_table tbody');
             tbody.innerHTML = ''; 
 
