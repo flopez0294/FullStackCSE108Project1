@@ -110,22 +110,8 @@ table{
     /* gap: 20px; */
 }
 
-#student_buttons button {
-    padding: 10px 20px;
-    font-size: 16px;
-    background-color: rgba(194, 40, 40, 1);
-    color: white;
-    border: none;
-    /* border-radius: 5px; */
-    cursor: pointer;
-    /* box-shadow: 0 0 10px rgba(0, 0, 0, 0.3); */
-    transition: background-color 0.3s;
-}
 
-#student_buttons button:hover {
-    background-color: rgba(194, 40, 40, 0.8);
 
-}
 
 #signout {
     padding: 10px 20px;
@@ -140,6 +126,18 @@ table{
 }
 #signout:hover {
     background-color: rgba(194, 40, 40, 0.8);
+}
+
+#student_buttons button{
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: rgba(194, 40, 40, 1);
+    color: white;
+    border: none;
+    border-radius: 0px;
+    cursor: pointer;
+    /* box-shadow: 0 0 10px rgba(0, 0, 0, 0.3); */
+    transition: background-color 0.3s;
 }
 
 #student_buttons button:active {
@@ -159,11 +157,25 @@ table{
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
+button {
+    padding: 20px;
+    text-align: center;
+    border-radius: 5px;
+    text-transform: capitalize;
+    transition: background-color 0.7s;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #555;
+}
+
 #sign_out_button {
     position: absolute;
-    right: 20px;
+    right: 25px;
     top: 20px;
     border: #555 dashed 1px;
+    padding-right: 5px;
 }
 
 .teacher_body {
@@ -184,7 +196,7 @@ table{
     height: 75x; /* Adjust height as needed */
     display: flex;
     margin-bottom: 20px;
-    padding: 0;
+    padding-right: 10px;
     justify-content: space-between;
     align-items: center;
 }
@@ -225,4 +237,16 @@ table{
 #students_table {
     margin-top: 75px;
     width:100%;
+}
+
+#student_buttons button:hover {
+    background-color: rgba(194, 40, 40, 0.8);
+}
+
+#student_table button {
+    width: 90%;
+    box-sizing: border-box;
+    text-align: center;
+    padding: 12px 20px;
+    font-size: 15px;
 }

@@ -45,8 +45,9 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     fullname = db.Column(db.String(100), nullable=False)
     username = db.Column(db.String(100), unique=True, nullable=False)
-    password = db.Column(db.String(200), nullable=False)
     role = db.Column(db.String(50), nullable=False)
+    password = db.Column(db.String(200), nullable=False)
+
 
     def __repr__(self):
         return f"<User {self.fullname}>"
@@ -65,7 +66,6 @@ class Student(User):
     __tablename__ = 'students'
     id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
     courses = db.relationship('Course', secondary='student_course', back_populates="students")
-    
 
 class Course(db.Model):
     __tablename__ = 'courses'
@@ -173,6 +173,13 @@ class CourseView(ModelView):
     def inaccessible_callback(self, name, **kwargs):
         return redirect(url_for('login'))
     
+    def _get_currsize(view, context, model, name):
+        return len(model.students)
+    
+    column_formatters = {
+        'currsize': _get_currsize
+    }
+    
     def on_model_change(self, form, model, is_created):
         model.teachers = []
         
@@ -181,6 +188,7 @@ class CourseView(ModelView):
             model.teachers.append(teacher)
         
         super().on_model_change(form, model, is_created)
+        
 
 class MyAdminIndexView(AdminIndexView):
     def is_accessible(self):

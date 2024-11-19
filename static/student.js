@@ -82,7 +82,7 @@ function load_available_courses() {
                 <td>${course.time}</td>
                 <td>${course.enrolled}</td>
                 <td>${course.is_enrolled === true ?
-                        `<button onclick="unenroll_course(${course.id})">Unenroll</p>`:
+                        `<button onclick="unenroll_course(${course.id})">Unenroll</button>`:
                         `<button onclick="join_course(${course.id})">Enroll</button>`
                 }
             `;
@@ -174,7 +174,7 @@ function loadTeacherName() {
         })
         .then(data => {
             console.log("Response data:", data);
-            h1.textContent += data.name; // Update the H1 content
+            h1.textContent += data.name;
         })
         .catch(error => console.error("Error fetching name details:", error));
     teacher_courses_table()
