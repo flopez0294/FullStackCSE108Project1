@@ -5,6 +5,9 @@
     justify-content: center;
     align-items: center;
 }
+body {
+    background-color: #e4dada;   
+}
 
 h2 {
     font-size: xx-large;
@@ -85,23 +88,26 @@ table{
 }
 
 #formatting {
+    margin-top: 75px;
     width: 80%;
     max-width: 1200px;
     padding: 20px;
     border-radius: 10px;
-    margin: 0 auto;
     text-align: center;
 }
 
 .student_body{
     background-color: #e4dada;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 #student_buttons {
     display: flex;
     justify-content: center;
-    gap: 20px;
-    margin-bottom: 20px;
+    /* gap: 20px; */
 }
 
 #student_buttons button {
@@ -110,13 +116,29 @@ table{
     background-color: rgba(194, 40, 40, 1);
     color: white;
     border: none;
-    border-radius: 5px;
+    /* border-radius: 5px; */
     cursor: pointer;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    /* box-shadow: 0 0 10px rgba(0, 0, 0, 0.3); */
     transition: background-color 0.3s;
 }
 
 #student_buttons button:hover {
+    background-color: rgba(194, 40, 40, 0.8);
+
+}
+
+#signout {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: rgba(194, 40, 40, 1);
+    color: white;
+    border: none;
+    /* border-radius: 5px; */
+    cursor: pointer;
+    /* box-shadow: 0 0 10px rgba(0, 0, 0, 0.3); */
+    transition: background-color 0.3s;
+}
+#signout:hover {
     background-color: rgba(194, 40, 40, 0.8);
 }
 
@@ -146,5 +168,61 @@ table{
 
 .teacher_body {
     background-color: #e4dada;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
+.teacher_navbar {
+    background-color: rgb(35, 33, 33);
+    position: fixed; /* Makes the navbar stay fixed at the top */
+    top: 0; /* Ensures the navbar is aligned to the top */
+    left: 0; /* Aligns to the left edge */
+    right: 0; 
+    overflow: hidden;
+    height: 75x; /* Adjust height as needed */
+    display: flex;
+    margin-bottom: 20px;
+    padding: 0;
+    justify-content: space-between;
+    align-items: center;
+}
+.teacher_navbar a {
+    float: left;
+    color: #f2f2f2;
+    background-color: rgba(194, 40, 40, 1);
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    font-size: 17px;
+    height: 100%;
+    display: flex; /* Makes the <a> a flex container */
+    align-items: center; /* Vertically centers text inside the <a> */
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+.teacher_navbar a:hover {
+    background-color: #ddd;
+    color: black;
+}
+
+.topnav a.active {
+    background-color: rgba(194, 40, 40, 1);
+    color: white;
+}
+
+#teacher_displayname, #coursename, #student_displayname{
+    padding-left: 15px;
+    color: white
+}
+
+#teacher_table {
+    margin-top: 75px; 
+}
+
+#students_table {
+    margin-top: 75px;
+    width:100%;
+}

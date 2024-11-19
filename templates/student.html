@@ -7,13 +7,19 @@
     <link rel="stylesheet" href="/static/login.css">
     <script src="/static/student.js"></script>
 </head>
-<body class="student_body">
-    <a href="/logout" id="sign_out_button">Sign Out</a>
-    <div id="formatting">
+<body class="student_body" onload="loadStudentName()">
+    <div class="teacher_navbar">
+        <div>
+            <h1 id="student_displayname">Hello, </h1>
+        </div>
         <div id="student_buttons">
             <button onclick="student_courses_table()"> Your Courses</button>
             <button onclick="load_available_courses()"> Add Courses</button>
+            <button><a id="signout" href="/logout">Sign Out</a></button>
         </div>
+    </div>
+    <div id="formatting">
+        
         <div id="student_table" hidden>
             <table>
                 <thead>

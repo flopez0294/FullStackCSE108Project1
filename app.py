@@ -262,7 +262,7 @@ def course_table():
             "name": course.name,
             "teacher": ", ".join([teacher.fullname for teacher in course.teachers]),
             "time": f"{course.days} {course.start_time.strftime('%H:%M')} - {course.end_time.strftime('%H:%M')}",
-            "grade": f"{StudentCourse.query.filter_by(student_id=student.id, course_id=course.id).first()}"
+            "grade": StudentCourse.query.filter_by(student_id=student.id, course_id=course.id).first().grade or "N/A"
         } for course in student_courses
     ]
     
@@ -315,6 +315,11 @@ def join_course(course_id):
 def teacher_view():
     return render_template('teacher.html')
 
+@app.route('/currusername')
+def currUserName():
+    print("Current user fullname:", current_user.fullname)
+    return jsonify({'name': current_user.fullname})
+
 @app.route("/teacher_courses", methods=['GET'])
 @login_required
 def teacher_courses():
@@ -336,38 +341,54 @@ def teacher_courses():
 
     return jsonify(courses_data)
 
+@app.route("/editgrade/<int:course_id>", methods=["PUT"])
+def editGrade(course_id):
+    new_grade = request.get_json()
+    print(new_grade)
+
+    
+
+    if new_grade['grade'] is None:
+        flash("there was no grade", 'error')
+        return make_response("No grade", 400)
+    
+    stud = StudentCourse.query.filter_by(course_id=course_id, student_id=new_grade['id']).first()
+    if stud is None:
+        flash("No Student exist", 'error')
+        return make_response("No Student exist", 400)
+    stud.grade = new_grade['grade']
+    db.session.commit()
+    return make_response("Update Successfully", 200)
 
 
-
-@app.route("/course_students/<int:course_id>", methods=["GET"])
+@app.route("/teacher/<int:id>", methods=["GET"])
 @login_required
-def course_students(course_id):
+def teacherCourseId(id):
+    return render_template('teacher_students.html')
+
+@app.route('/course/<int:id>', methods=["GET"])
+def courseReturn(id):
+    course = Course.query.filter_by(id=id).first()
+    if course == None:
+        flash("Course is not avaliable", "error")
+        return redirect(url_for("teacher.view"))
+    students_data = []
+    for student in course.students:
+        student_course = StudentCourse.query.filter_by(student_id=student.id, course_id=id).first()
+        grade = student_course.grade if student_course else 'N/A'
+        students_data.append({
+            'name': student.fullname,
+            'id': student.id,
+            'grade': grade
+        })
     
-    teacher = Teacher.query.filter_by(id=current_user.id).first()
-    if not teacher:
-        flash("You must be a teacher to access this page", "error")
-        return redirect(url_for("index"))
-
+    # Prepare the response as a dictionary
+    course_info = {
+        'coursename': course.name,
+        'students': students_data
+    }
     
-    course = Course.query.get(course_id)
-    if not course or teacher not in course.teachers:
-        flash("You are not authorized to view this course", "error")
-        return redirect(url_for("teacher_courses"))
-
-   
-    students_data = [
-        {
-            "fullname": student.fullname,
-            "username": student.username,
-            "grade": next(
-                (sc.grade for sc in StudentCourse.query.filter_by(student_id=student.id, course_id=course_id).all()), None
-            )
-        }
-        for student in course.students
-    ]
-
-   
-    return render_template("course_students.html", course=course, students=students_data)
+    return jsonify(course_info)
 
 
 if __name__ == "__main__":
